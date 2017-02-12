@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.*;
 
@@ -35,10 +36,21 @@ public class Client {
                     case StatusCode.GET_LIST_PROCESSES:
                         toSer.writeUTF(StatusCode.GET_LIST_PROCESSES);
                         toSer.flush();
-                        String processes = fromSer.readUTF();
-                        for (int i = 0; i < processes.length() ; i++) {
-
+                        ArrayList<String> processes = (ArrayList<String>) fromSer.readObject();
+                        System.out.println("Below is list of processes");
+                        for (int i = 0; i < processes.size() ; i++) {
+                            System.out.println(processes.get(i));
                         }
+                        System.out.println("\nEnd of list");
+                        break;
+
+                    case StatusCode.KILL_A_PROCESS :
+                        System.out.println("Enter the process to kill ...");
+                        String prcsToKill = sc.nextLine().trim();
+                        System.out.println("Sending to server : " +prcsToKill);
+                        toSer.writeUTF(StatusCode.KILL_A_PROCESS + " " +prcsToKill);
+                        toSer.flush();
+                        System.out.println(fromSer.readUTF());
                         break;
 
                     case StatusCode.SLEEP_PC:
@@ -102,6 +114,8 @@ public class Client {
 
         } catch (IOException e) {
             System.err.println("Problem connecting to server or server shut down");
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
