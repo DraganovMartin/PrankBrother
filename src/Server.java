@@ -1,3 +1,5 @@
+import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -68,13 +70,35 @@ public class Server {
                             toClient.flush();
                         }
                         break;
+
+                    case StatusCode.SEND_KEYSTROKES :
+                        int charCode = fromClient.read();
+                        try {
+                            Robot robo = new Robot();
+                            robo.setAutoWaitForIdle(true);
+                            try {
+                                robo.keyPress(charCode);
+                            }catch(IllegalArgumentException ex){
+                                System.err.println("Inalid keyCode : " + charCode);
+                            }
+                            robo.setAutoDelay(100);
+                            try {
+                                robo.keyRelease(charCode);
+                            }catch(IllegalArgumentException ex){
+                                System.err.println("Invalid keyCode : " + charCode);
+                            }
+                        } catch (AWTException e) {
+                            e.printStackTrace();
+                        }
+
+                        break;
                 }
             }
 
         } catch (IOException e) {
             System.err.println("Problem in starting server, connecting with client or transferring data.");
             e.printStackTrace();
-            //Server.main(new String[]{});
+            Server.main(new String[]{});
         }
     }
 }

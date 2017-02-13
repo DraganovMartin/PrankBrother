@@ -1,3 +1,4 @@
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -10,15 +11,20 @@ import java.util.concurrent.*;
  * Created by DevM on 2/10/2017.
  */
 public class Client {
+    private static Socket socket;
+    private static ObjectOutputStream toSer;
+    public static boolean stopStrokes;
+
     public static void main(String[] args) {
         boolean stop = false;
         try {
             Scanner sc = new Scanner(System.in);
             System.out.println("Enter IP to connect to");
             String ip = sc.nextLine();
-            Socket socket = new Socket(ip,9999);
-            ObjectOutputStream toSer = new ObjectOutputStream(socket.getOutputStream());
+            socket = new Socket(ip,9999);
+            toSer = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream fromSer = new ObjectInputStream(socket.getInputStream());
+
 
             while (!stop){
                 System.out.println("Enter command, input 'help' for details.");
@@ -51,6 +57,13 @@ public class Client {
                         toSer.writeUTF(StatusCode.KILL_A_PROCESS + " " +prcsToKill);
                         toSer.flush();
                         System.out.println(fromSer.readUTF());
+                        break;
+
+                    case StatusCode.SEND_KEYSTROKES:
+                        System.out.println("Start typing ... press 'end' to stop");
+
+                        new NonBlock(toSer);
+
                         break;
 
                     case StatusCode.SLEEP_PC:
@@ -111,6 +124,7 @@ public class Client {
             }
             System.out.println("Exiting");
             socket.close();
+            System.exit(0);
 
         } catch (IOException e) {
             System.err.println("Problem connecting to server or server shut down");
@@ -119,4 +133,5 @@ public class Client {
             e.printStackTrace();
         }
     }
+
 }
