@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Created by DevM on 2/10/2017.
@@ -136,11 +137,17 @@ public class Server {
                         t1.start();
                         toClient.writeUTF("File agent started...");
                         toClient.flush();
-//                        try {
-//                            t1.join();
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
+                        try {
+                            t1.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+
+                    case StatusCode.GET_FILES_TO_OPEN:;
+                        final File files = new File(".");
+                        toClient.writeObject(files.list());
+                        toClient.flush();
                         break;
                 }
             }

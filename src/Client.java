@@ -143,6 +143,13 @@ public class Client {
                         System.out.println("File with size "+ file.length()/1000 +" kb's uploaded successfully for : " + end/1000 + "secs !");
                         break;
 
+                    case StatusCode.GET_FILES_TO_OPEN:
+                        toSer.writeUTF(StatusCode.GET_FILES_TO_OPEN);
+                        toSer.flush();
+                        String[] files = (String[]) fromSer.readObject();
+                        System.out.println(Arrays.toString(files));
+                        break;
+
 
                     case StatusCode.CHECK_CONNECTION:
                         toSer.writeUTF(StatusCode.CHECK_CONNECTION);
