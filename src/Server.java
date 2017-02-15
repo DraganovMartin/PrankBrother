@@ -9,10 +9,12 @@ import java.util.ArrayList;
  * Created by DevM on 2/10/2017.
  */
 public class Server {
+    private static Socket fileSocket = null;
     public static void main(String[] args) {
         boolean stopServer = false;
+        ServerSocket socket = null;
         try {
-            ServerSocket socket = new ServerSocket(9999);
+            socket = new ServerSocket(9999);
             Socket client = socket.accept();
             System.out.println("Client connected !");
             ObjectOutputStream toClient = new ObjectOutputStream(client.getOutputStream());
@@ -92,12 +94,67 @@ public class Server {
                         }
 
                         break;
+
+                    case StatusCode.SEND_FILE:
+                        final String name = data;
+                        final ServerSocket tempSocket = new ServerSocket(0);
+                        while(!tempSocket.isBound()){
+
+                        }
+                        toClient.writeUTF(Integer.toString(tempSocket.getLocalPort()));
+                        toClient.flush();
+
+                        Thread t1 = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    fileSocket = tempSocket.accept();
+                                    File file = new File(name);
+                                    DataOutputStream outputStream = new DataOutputStream(fileSocket.getOutputStream());
+                                    BufferedInputStream bis = new BufferedInputStream(fileSocket.getInputStream());
+                                    BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+                                    byte[] bytes = new byte[8192];
+                                    int data;
+                                    while((data = bis.read(bytes)) != -1){
+                                        bos.write(bytes,0,data);
+                                        bos.flush();
+                                    }
+
+                                    bos.close();
+//                                    System.out.println("File written !");
+//                                    toClient.writeUTF("File written !");
+                                    bis.close();
+
+                                    fileSocket.close();
+                                    tempSocket.close();
+                                } catch (IOException e) {
+                                    System.err.println("Cannot connect with file client !");
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                        t1.start();
+                        toClient.writeUTF("File agent started...");
+                        toClient.flush();
+//                        try {
+//                            t1.join();
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+                        break;
                 }
             }
 
         } catch (IOException e) {
             System.err.println("Problem in starting server, connecting with client or transferring data.");
             e.printStackTrace();
+            if(socket != null){
+                try {
+                    socket.close();
+                } catch (IOException e1) {
+                    System.err.println("Cannot close socket !");
+                }
+            }
             Server.main(new String[]{});
         }
     }

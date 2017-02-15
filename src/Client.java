@@ -1,9 +1,11 @@
+import javafx.stage.FileChooser;
+
+import javax.swing.*;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.*;
 
@@ -14,13 +16,14 @@ public class Client {
     private static Socket socket;
     private static ObjectOutputStream toSer;
     public static boolean stopStrokes;
+    private static String ip = null;
 
     public static void main(String[] args) {
         boolean stop = false;
         try {
             Scanner sc = new Scanner(System.in);
             System.out.println("Enter IP to connect to");
-            String ip = sc.nextLine();
+            ip = sc.nextLine();
             socket = new Socket(ip,9999);
             toSer = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream fromSer = new ObjectInputStream(socket.getInputStream());
@@ -99,6 +102,47 @@ public class Client {
 //                        }
                         System.out.println(fromSer.readUTF()); // delete if uncommenting upper code
                         break;
+                    case StatusCode.SEND_FILE:
+                        final File file = new ChooseFile().getFile();
+                        String[] toGetName = file.getPath().split("\\\\");
+                        final String name = toGetName[toGetName.length-1];
+                        toSer.writeUTF(StatusCode.SEND_FILE + " " + name);
+                        toSer.flush();
+                        final int filePort = Integer.valueOf(fromSer.readUTF());
+                        System.out.println(fromSer.readUTF());
+                        long start = System.currentTimeMillis();
+                        Thread t1 = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Socket fileSocket = new Socket(ip,filePort);
+                                BufferedInputStream fileStream = new BufferedInputStream(new FileInputStream(file));
+                                BufferedOutputStream toFileSer = new BufferedOutputStream(fileSocket.getOutputStream());
+                                byte[] bytes = new byte[8192];
+                                int data;
+                                while((data = fileStream.read(bytes)) != -1){
+                                    toFileSer.write(bytes,0,data);
+                                    toFileSer.flush();
+                                }
+                                fileStream.close();
+                                toFileSer.close();
+                                fileSocket.close();
+                            } catch (IOException e) {
+                                System.err.println("Problem connecting to file server !");
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                        t1.start();
+                        try {
+                            t1.join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        long end = System.currentTimeMillis() - start;
+                        System.out.println("File with size "+ file.length()/1000 +" kb's uploaded successfully for : " + end/1000 + "secs !");
+                        break;
+
 
                     case StatusCode.CHECK_CONNECTION:
                         toSer.writeUTF(StatusCode.CHECK_CONNECTION);
@@ -132,6 +176,34 @@ public class Client {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    public static class ChooseFile {
+        private JFrame frame;
+        public ChooseFile() {
+            frame = new JFrame();
+
+            frame.setVisible(true);
+            BringToFront();
+        }
+        public File getFile() {
+            JFileChooser fc = new JFileChooser();
+            if(JFileChooser.APPROVE_OPTION == fc.showOpenDialog(null)){
+                frame.setVisible(false);
+                return fc.getSelectedFile();
+            }else {
+                System.out.println("Next time select a file.");
+                System.exit(1);
+            }
+            return null;
+        }
+
+        private void BringToFront() {
+            frame.setExtendedState(JFrame.ICONIFIED);
+            frame.setExtendedState(JFrame.NORMAL);
+
+        }
+
     }
 
 }
