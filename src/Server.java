@@ -157,6 +157,14 @@ public class Server {
                         toClient.flush();
                         break;
 
+                    case StatusCode.DELETE_FILE :
+                        File fileToDel = new File(data);
+                        fileToDel.delete();
+                        toClient.writeUTF("File deleted !");
+                        toClient.flush();
+                        break;
+
+
                     case StatusCode.RESTART_PC:
                         toClient.writeUTF("Attempting to restart remote pc ...");
                         toClient.flush();

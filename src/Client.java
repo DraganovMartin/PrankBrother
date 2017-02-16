@@ -41,6 +41,7 @@ public class Client {
                 String command = sc.nextLine().toUpperCase();
                 switch (command) {
                     case StatusCode.HELP:
+                        Arrays.sort(StatusCode.statusCodes);
                         for (int i = 0; i < StatusCode.statusCodes.length; i++) {
                             String code = StatusCode.statusCodes[i];
                             System.out.println(code);
@@ -161,6 +162,14 @@ public class Client {
                         System.out.println("Enter file to open ...");
                         String fileToOpen = sc.nextLine();
                         toSer.writeUTF(StatusCode.OPEN_FILE_ON_SERVER + " " + fileToOpen);
+                        toSer.flush();
+                        System.out.println(fromSer.readUTF());
+                        break;
+
+                    case StatusCode.DELETE_FILE:
+                        System.out.println("Enter file to delete ...");
+                        String fileToDel = sc.nextLine();
+                        toSer.writeUTF(StatusCode.DELETE_FILE + " " +fileToDel);
                         toSer.flush();
                         System.out.println(fromSer.readUTF());
                         break;
