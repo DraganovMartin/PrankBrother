@@ -12,9 +12,13 @@ public abstract class StatusCode {
     public static final String SEND_KEYSTROKES = "STROKES";
     public static final String SEND_FILE = "FILE";
     public static final String GET_FILES_TO_OPEN = "FILELIST";
+    public static final String OPEN_FILE_ON_SERVER = "OPEN";
+    public static final String RESTART_PC = "RESTART";
+    public static final String TERMINATE_PC = "SHUTDOWN";
 
 
 
 
-    public static final String[] statusCodes = {SLEEP_PC,GET_LIST_PROCESSES,KILL_A_PROCESS,HELP,EXIT,CHECK_CONNECTION,KILL_SERVER,SEND_KEYSTROKES,SEND_FILE,GET_FILES_TO_OPEN};
+
+    public static final String[] statusCodes = {SLEEP_PC,GET_LIST_PROCESSES,KILL_A_PROCESS,HELP,EXIT,CHECK_CONNECTION,KILL_SERVER,SEND_KEYSTROKES,SEND_FILE,GET_FILES_TO_OPEN,OPEN_FILE_ON_SERVER,RESTART_PC,TERMINATE_PC};
 }

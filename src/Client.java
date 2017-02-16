@@ -150,6 +150,25 @@ public class Client {
                         System.out.println(Arrays.toString(files));
                         break;
 
+                    case StatusCode.OPEN_FILE_ON_SERVER:
+                        System.out.println("Enter file to open ...");
+                        String fileToOpen = sc.nextLine();
+                        toSer.writeUTF(StatusCode.OPEN_FILE_ON_SERVER + " " + fileToOpen);
+                        toSer.flush();
+                        System.out.println(fromSer.readUTF());
+                        break;
+
+                    case  StatusCode.RESTART_PC :
+                        toSer.writeUTF(StatusCode.RESTART_PC);
+                        toSer.flush();
+                        System.out.println(fromSer.readUTF() + " check connection !");
+                        break;
+
+                    case  StatusCode.TERMINATE_PC :
+                        toSer.writeUTF(StatusCode.TERMINATE_PC);
+                        toSer.flush();
+                        System.out.println(fromSer.readUTF() + " check connection !");
+                        break;
 
                     case StatusCode.CHECK_CONNECTION:
                         toSer.writeUTF(StatusCode.CHECK_CONNECTION);

@@ -149,6 +149,25 @@ public class Server {
                         toClient.writeObject(files.list());
                         toClient.flush();
                         break;
+
+                    case StatusCode.OPEN_FILE_ON_SERVER:
+                        File fileToOpen = new File(data);
+                        Desktop.getDesktop().open(fileToOpen);
+                        toClient.writeUTF("File opened with default program");
+                        toClient.flush();
+                        break;
+
+                    case StatusCode.RESTART_PC:
+                        toClient.writeUTF("Attempting to restart remote pc ...");
+                        toClient.flush();
+                        Runtime.getRuntime().exec("shutdown /r");
+                        break;
+
+                    case StatusCode.TERMINATE_PC:
+                        toClient.writeUTF("Attempting to restart remote pc ...");
+                        toClient.flush();
+                        Runtime.getRuntime().exec("shutdown /s");
+                        break;
                 }
             }
 
