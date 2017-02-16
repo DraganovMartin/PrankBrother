@@ -1,9 +1,12 @@
 import javafx.stage.FileChooser;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -13,28 +16,32 @@ import java.util.concurrent.*;
  * Created by DevM on 2/10/2017.
  */
 public class Client {
-    private static Socket socket;
     private static ObjectOutputStream toSer;
     public static boolean stopStrokes;
     private static String ip = null;
 
     public static void main(String[] args) {
         boolean stop = false;
+        Socket socket = null;
         try {
             Scanner sc = new Scanner(System.in);
-            System.out.println("Enter IP to connect to");
-            ip = sc.nextLine();
-            socket = new Socket(ip,9999);
+            if (args.length > 0) {
+                ip = args[0];
+            } else {
+                System.out.println("Enter IP to connect to");
+                ip = sc.nextLine();
+            }
+            socket = new Socket(ip, 9999);
             toSer = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream fromSer = new ObjectInputStream(socket.getInputStream());
 
 
-            while (!stop){
+            while (!stop) {
                 System.out.println("Enter command, input 'help' for details.");
                 String command = sc.nextLine().toUpperCase();
-                switch (command){
-                    case StatusCode.HELP :
-                        for (int i = 0; i < StatusCode.statusCodes.length ; i++) {
+                switch (command) {
+                    case StatusCode.HELP:
+                        for (int i = 0; i < StatusCode.statusCodes.length; i++) {
                             String code = StatusCode.statusCodes[i];
                             System.out.println(code);
                         }
@@ -47,17 +54,17 @@ public class Client {
                         toSer.flush();
                         ArrayList<String> processes = (ArrayList<String>) fromSer.readObject();
                         System.out.println("Below is list of processes");
-                        for (int i = 0; i < processes.size() ; i++) {
+                        for (int i = 0; i < processes.size(); i++) {
                             System.out.println(processes.get(i));
                         }
                         System.out.println("\nEnd of list");
                         break;
 
-                    case StatusCode.KILL_A_PROCESS :
+                    case StatusCode.KILL_A_PROCESS:
                         System.out.println("Enter the process to kill ...");
                         String prcsToKill = sc.nextLine().trim();
-                        System.out.println("Sending to server : " +prcsToKill);
-                        toSer.writeUTF(StatusCode.KILL_A_PROCESS + " " +prcsToKill);
+                        System.out.println("Sending to server : " + prcsToKill);
+                        toSer.writeUTF(StatusCode.KILL_A_PROCESS + " " + prcsToKill);
                         toSer.flush();
                         System.out.println(fromSer.readUTF());
                         break;
@@ -105,34 +112,34 @@ public class Client {
                     case StatusCode.SEND_FILE:
                         final File file = new ChooseFile().getFile();
                         String[] toGetName = file.getPath().split("\\\\");
-                        final String name = toGetName[toGetName.length-1];
+                        final String name = toGetName[toGetName.length - 1];
                         toSer.writeUTF(StatusCode.SEND_FILE + " " + name);
                         toSer.flush();
                         final int filePort = Integer.valueOf(fromSer.readUTF());
                         System.out.println(fromSer.readUTF());
                         long start = System.currentTimeMillis();
                         Thread t1 = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                Socket fileSocket = new Socket(ip,filePort);
-                                BufferedInputStream fileStream = new BufferedInputStream(new FileInputStream(file));
-                                BufferedOutputStream toFileSer = new BufferedOutputStream(fileSocket.getOutputStream());
-                                byte[] bytes = new byte[8192];
-                                int data;
-                                while((data = fileStream.read(bytes)) != -1){
-                                    toFileSer.write(bytes,0,data);
-                                    toFileSer.flush();
+                            @Override
+                            public void run() {
+                                try {
+                                    Socket fileSocket = new Socket(ip, filePort);
+                                    BufferedInputStream fileStream = new BufferedInputStream(new FileInputStream(file));
+                                    BufferedOutputStream toFileSer = new BufferedOutputStream(fileSocket.getOutputStream());
+                                    byte[] bytes = new byte[8192];
+                                    int data;
+                                    while ((data = fileStream.read(bytes)) != -1) {
+                                        toFileSer.write(bytes, 0, data);
+                                        toFileSer.flush();
+                                    }
+                                    fileStream.close();
+                                    toFileSer.close();
+                                    fileSocket.close();
+                                } catch (IOException e) {
+                                    System.err.println("Problem connecting to file server !");
+                                    e.printStackTrace();
                                 }
-                                fileStream.close();
-                                toFileSer.close();
-                                fileSocket.close();
-                            } catch (IOException e) {
-                                System.err.println("Problem connecting to file server !");
-                                e.printStackTrace();
                             }
-                        }
-                    });
+                        });
                         t1.start();
                         try {
                             t1.join();
@@ -140,7 +147,7 @@ public class Client {
                             e.printStackTrace();
                         }
                         long end = System.currentTimeMillis() - start;
-                        System.out.println("File with size "+ file.length()/1000 +" kb's uploaded successfully for : " + end/1000 + "secs !");
+                        System.out.println("File with size " + file.length() / 1000 + " kb's uploaded successfully for : " + end / 1000 + "secs !");
                         break;
 
                     case StatusCode.GET_FILES_TO_OPEN:
@@ -158,13 +165,13 @@ public class Client {
                         System.out.println(fromSer.readUTF());
                         break;
 
-                    case  StatusCode.RESTART_PC :
+                    case StatusCode.RESTART_PC:
                         toSer.writeUTF(StatusCode.RESTART_PC);
                         toSer.flush();
                         System.out.println(fromSer.readUTF() + " check connection !");
                         break;
 
-                    case  StatusCode.TERMINATE_PC :
+                    case StatusCode.TERMINATE_PC:
                         toSer.writeUTF(StatusCode.TERMINATE_PC);
                         toSer.flush();
                         System.out.println(fromSer.readUTF() + " check connection !");
@@ -175,8 +182,7 @@ public class Client {
                         try {
                             toSer.flush();
                             System.out.println(fromSer.readUTF());
-                        }
-                        catch (IOException ex){
+                        } catch (IOException ex) {
                             System.err.println("Server not responding !!!");
                         }
                         break;
@@ -188,14 +194,18 @@ public class Client {
                         toSer.writeUTF(StatusCode.KILL_SERVER);
                         toSer.flush();
                         break;
-                    default :
+
+                    case StatusCode.RESET_CONNECTION:
+                        File thisProgram = new File("Client.jar");
+                        Desktop.getDesktop().open(thisProgram);
+                        System.exit(5);
+                    default:
                         System.out.println("Please enter valid command");
                 }
             }
             System.out.println("Exiting");
             socket.close();
             System.exit(0);
-
         } catch (IOException e) {
             System.err.println("Problem connecting to server or server shut down");
             e.printStackTrace();
