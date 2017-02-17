@@ -112,6 +112,9 @@ public class Client {
                         break;
                     case StatusCode.SEND_FILE:
                         final File file = new ChooseFile().getFile();
+                        if(file == null){
+                            break;
+                        }
                         String[] toGetName = file.getPath().split("\\\\");
                         final String name = toGetName[toGetName.length - 1];
                         toSer.writeUTF(StatusCode.SEND_FILE + " " + name);
@@ -238,7 +241,7 @@ public class Client {
                 return fc.getSelectedFile();
             }else {
                 System.out.println("Next time select a file.");
-                System.exit(1);
+                //System.exit(1);
             }
             return null;
         }

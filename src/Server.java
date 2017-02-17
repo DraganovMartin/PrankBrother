@@ -152,7 +152,14 @@ public class Server {
 
                     case StatusCode.OPEN_FILE_ON_SERVER:
                         File fileToOpen = new File(data);
-                        Desktop.getDesktop().open(fileToOpen);
+                        try {
+                            Desktop.getDesktop().open(fileToOpen);
+                        }catch (Exception e){
+                            toClient.writeUTF("File not found !!!");
+                            toClient.flush();
+                            e.printStackTrace();
+                            break;
+                        }
                         toClient.writeUTF("File opened with default program");
                         toClient.flush();
                         break;
